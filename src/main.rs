@@ -21,6 +21,9 @@ fn main() {
         "init" => {
             init();
         }
+        "use" => {
+            juse();
+        }
         "env" => {
             env();
         }
@@ -35,12 +38,22 @@ fn main() {
 }
 
 fn print_usage_and_exit() -> ! {
-    eprintln!("Usage: jlo [ init | env ]");
+    eprintln!("Usage: jlo [ env | init | use ]");
     exit(1);
 }
 
 fn init() {
     conf::init_config();
+}
+
+fn juse() {
+    if env::args().len() < 3 {
+        eprintln!("Missing version argument.");
+        print_usage_and_exit()
+    }
+
+    let version = &env::args().nth(2).unwrap();
+    setup(version);
 }
 
 fn env() {
@@ -49,6 +62,10 @@ fn env() {
         exit(1);
     });
 
+    setup(&java_version);
+}
+
+fn setup(java_version: &String) {
     eprintln!("Setup environment for Java {}", java_version);
 
     let jdk_base = jlo_home_dir().join("jdks");
