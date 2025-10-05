@@ -43,7 +43,8 @@ fn init() {
         .stderr(predicate::str::is_match(r"Error: File '.jlorc' already exists!").unwrap())
         .stdout("");
 
-    // clean up
+    // leave temp dir and clean up
+    std::env::set_current_dir(std::env::temp_dir()).unwrap();
     temp_dir.close().unwrap();
 }
 
@@ -67,7 +68,8 @@ fn env() {
         .code(0)
         .stdout(predicate::str::contains("export JAVA_HOME=").and(predicate::str::contains("export PATH=")));
 
-    // clean up
+    // leave temp dir and clean up
+    std::env::set_current_dir(std::env::temp_dir()).unwrap();
     unsafe { std::env::remove_var("JLO_HOME"); }
     temp_dir.close().unwrap();
 }
