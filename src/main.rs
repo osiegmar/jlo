@@ -5,7 +5,7 @@ mod extract;
 
 use std::{env};
 use std::fs::File;
-use std::path::{PathBuf};
+use std::path::{Path, PathBuf};
 use std::process::exit;
 use tempfile::{tempdir};
 
@@ -65,7 +65,7 @@ fn env() {
     });
 }
 
-fn install_jdk(java_home: &PathBuf) {
+fn install_jdk(java_home: &Path) {
     // Find JDK metadata
     let jdk_metadata = adoptium::fetch_metadata();
 
