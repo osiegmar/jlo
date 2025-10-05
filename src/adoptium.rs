@@ -2,10 +2,10 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::exit;
 
-pub fn fetch_metadata() -> JdkMetadata {
+pub fn fetch_metadata(java_version : &String) -> JdkMetadata {
     let api_url = format!(
         "https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture={arch}&image_type=jdk&os={os}&vendor=eclipse",
-        java_version = "25",
+        java_version = java_version,
         arch = jdk_arch(),
         os = jdk_os()
     );
@@ -28,11 +28,25 @@ pub fn fetch_metadata() -> JdkMetadata {
                     exit(1);
                 }
             };
-            let semver = json[0]["version"]["semver"].as_str().unwrap_or("");
-            let release_name = json[0]["release_name"].as_str().unwrap_or("");
-            let package_name = json[0]["binary"]["package"]["name"].as_str().unwrap_or("");
-            let download_link = json[0]["binary"]["package"]["link"].as_str().unwrap_or("");
-            let checksum = json[0]["binary"]["package"]["checksum"]
+
+            let json_array = json.as_array().unwrap_or_else(|| {
+                eprintln!("Error: Unexpected JSON structure received from API.");
+                exit(1);
+            });
+
+            if json_array.len() == 0 {
+                eprintln!("Error: No matching JDK found for the specified version and system architecture.");
+                eprintln!("Tried to fetch metadata from: {}", api_url);
+                exit(1);
+            }
+
+            let root_node = json_array.first().unwrap();
+
+            let semver = root_node["version"]["semver"].as_str().unwrap_or("");
+            let release_name = root_node["release_name"].as_str().unwrap_or("");
+            let package_name = root_node["binary"]["package"]["name"].as_str().unwrap_or("");
+            let download_link = root_node["binary"]["package"]["link"].as_str().unwrap_or("");
+            let checksum = root_node["binary"]["package"]["checksum"]
                 .as_str()
                 .unwrap_or("");
             if semver.is_empty()

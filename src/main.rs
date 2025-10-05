@@ -53,6 +53,12 @@ fn juse() {
     }
 
     let version = &env::args().nth(2).unwrap();
+    
+    if !conf::is_valid_version(version) {
+        eprintln!("Unsupported version: '{}'.", version);
+        exit(1);
+    }
+    
     setup(version);
 }
 
@@ -72,7 +78,7 @@ fn setup(java_version: &String) {
 
     let java_home = find_suitable_jdk(&jdk_base, &java_version)
         .unwrap_or_else(|| {
-            install_jdk(&jdk_base)
+            install_jdk(&jdk_base, &java_version)
         });
 
     eprintln!("Using JAVA_HOME: {}", java_home.to_str().unwrap());
@@ -103,9 +109,9 @@ fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<PathBuf>
     matching_versions.into_iter().next()
 }
 
-fn install_jdk(jdk_base: &Path) -> PathBuf {
+fn install_jdk(jdk_base: &Path, java_version: &String) -> PathBuf {
     // Find JDK metadata
-    let jdk_metadata = adoptium::fetch_metadata();
+    let jdk_metadata = adoptium::fetch_metadata(java_version);
 
     // Download JDK
     let temp_dir = tempdir().unwrap();

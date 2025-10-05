@@ -17,8 +17,7 @@ pub fn load() -> Result<String, String> {
         return Err("File '.jlorc' is empty. Please specify a Java version.".to_string())
     }
 
-    // TODO support other versions
-    if java_version.ne("25") {
+    if !is_valid_version(&java_version) {
         return Err(format!("Unsupported Java version specified in '.jlorc': '{}'.", java_version));
     }
 
@@ -51,4 +50,14 @@ pub fn init_config() {
             exit(1);
         }
     }
+}
+
+pub fn is_valid_version(version: &str) -> bool {
+    // TODO call/cache https://api.adoptium.net/v3/info/available_releases ?
+
+    if let Ok(ver) = version.parse::<u32>() {
+        return ver >= 8
+    }
+
+    false
 }
