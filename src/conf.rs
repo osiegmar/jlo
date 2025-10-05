@@ -7,7 +7,7 @@ pub fn load() -> Result<String, String> {
         Ok(content) => content.trim().to_string(),
         Err(e) => {
             if e.kind() == std::io::ErrorKind::NotFound {
-                return Err("To initialize a new config file, run: `jlo.sh init` first.".to_string())
+                return Err("To initialize a new config file, run: `jlo init` first.".to_string())
             }
             return Err(format!("Could not read '.jlorc' file: {}", e));
         }

@@ -35,7 +35,7 @@ fn main() {
 }
 
 fn print_usage_and_exit() -> ! {
-    eprintln!("Usage: jlo.sh [ init | env ]");
+    eprintln!("Usage: jlo [ init | env ]");
     exit(1);
 }
 
@@ -103,7 +103,7 @@ fn jlo_home_dir() -> PathBuf {
     match env::var_os("JLO_HOME") {
         Some(jlo_home) => PathBuf::from(jlo_home),
         None => match env::home_dir() {
-            Some(home) => home.join(".jlo.sh"),
+            Some(home) => home.join(".jlo"),
             None => {
                 eprintln!("Error: Could not determine home directory.");
                 exit(1);
