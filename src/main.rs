@@ -10,12 +10,6 @@ use std::process::exit;
 use tempfile::{tempdir};
 
 fn main() {
-    // TODO support Windows when possible
-    if !cfg!(unix) {
-        eprintln!("Unsupported OS: {}", env::consts::OS);
-        exit(1);
-    }
-
     if env::args().len() < 2 {
         eprintln!("Arguments missing.");
         print_usage_and_exit()
