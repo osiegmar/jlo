@@ -51,12 +51,14 @@ fn env() {
 
     eprintln!("Setup environment for Java {}", java_version);
 
-    let java_home = jlo_home_dir().join("jdks").join(java_version);
+    let jdk_base = jlo_home_dir().join("jdks");
 
-    if !java_home.exists() {
-        install_jdk(&java_home);
-    }
+    let java_home = find_suitable_jdk(&jdk_base, &java_version)
+        .unwrap_or_else(|| {
+            install_jdk(&jdk_base)
+        });
 
+    eprintln!("Using JAVA_HOME: {}", java_home.to_str().unwrap());
     println!("export JAVA_HOME=\"{}\"", java_home.to_str().unwrap());
 
     let java_bin_path: String = java_home.join("bin").to_str().unwrap().into();
@@ -65,7 +67,26 @@ fn env() {
     });
 }
 
-fn install_jdk(java_home: &Path) {
+fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(jdk_base).ok()?;
+
+    let mut matching_versions: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.is_dir() && path.file_name()
+                .and_then(|name| name.to_str())
+                .map_or(false, |name| name.starts_with(required_version))
+        })
+        .collect();
+
+    // Sort by directory name in descending order
+    matching_versions.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
+
+    matching_versions.into_iter().next()
+}
+
+fn install_jdk(jdk_base: &Path) -> PathBuf {
     // Find JDK metadata
     let jdk_metadata = adoptium::fetch_metadata();
 
@@ -92,11 +113,14 @@ fn install_jdk(java_home: &Path) {
     )
         .unwrap();
 
-    adoptium::install_jdk(jdk_metadata, &temp_dir.path(), java_home);
+    let dest_dir = jdk_base.join(&jdk_metadata.semver);
+    adoptium::install_jdk(jdk_metadata, &temp_dir.path(), dest_dir.as_path());
 
     temp_dir.close().unwrap_or_else(|err| {
         eprintln!("Warning: Could not delete temporary directory: {}", err);
-    })
+    });
+
+    dest_dir
 }
 
 fn jlo_home_dir() -> PathBuf {
