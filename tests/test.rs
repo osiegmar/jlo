@@ -4,7 +4,7 @@ use serial_test::serial;
 
 #[test]
 fn missing_arguments() {
-    let mut cmd = Command::cargo_bin("jlo").unwrap();
+    let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
     cmd
         .assert()
         .failure()
@@ -21,7 +21,7 @@ fn init() {
     std::env::set_current_dir(&temp_dir).unwrap();
 
     // run init
-    let mut cmd = Command::cargo_bin("jlo").unwrap();
+    let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
     cmd
         .arg("init")
         .assert()
@@ -60,7 +60,7 @@ fn env() {
     std::fs::write(".jlorc", "25").unwrap();
 
     // run env
-    let mut cmd = Command::cargo_bin("jlo").unwrap();
+    let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
     cmd
         .arg("env")
         .assert()

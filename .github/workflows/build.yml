@@ -27,5 +27,5 @@ jobs:
         with:
           name: binary-${{ matrix.os }}
           path: |
-            target/release/jlo
-            target/release/jlo.exe
+            target/release/jlo-bin
+            target/release/jlo-bin.exe
