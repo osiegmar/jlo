@@ -53,12 +53,12 @@ fn juse() {
     }
 
     let version = &env::args().nth(2).unwrap();
-    
+
     if !conf::is_valid_version(version) {
         eprintln!("Unsupported version: '{}'.", version);
         exit(1);
     }
-    
+
     setup(version);
 }
 
@@ -72,22 +72,28 @@ fn env() {
 }
 
 fn setup(java_version: &String) {
-    eprintln!("Setup environment for Java {}", java_version);
-
     let jdk_base = jlo_home_dir().join("jdks");
 
-    let java_home = find_suitable_jdk(&jdk_base, &java_version)
-        .unwrap_or_else(|| {
-            install_jdk(&jdk_base, &java_version)
-        });
+    let java_home = find_suitable_jdk(&jdk_base, java_version)
+        .unwrap_or_else(|| install_jdk(&jdk_base, java_version));
 
-    eprintln!("Using JAVA_HOME: {}", java_home.to_str().unwrap());
-    println!("export JAVA_HOME=\"{}\"", java_home.to_str().unwrap());
+    let mut updates = false;
 
-    let java_bin_path: String = java_home.join("bin").to_str().unwrap().into();
-    update_path(&java_bin_path).map(|updated_path| {
+    let current_java_home = env::var("JAVA_HOME").unwrap_or_default();
+    if current_java_home != java_home.to_string_lossy() {
+        updates = true;
+        println!("export JAVA_HOME=\"{}\"", java_home.to_string_lossy());
+    }
+
+    let java_bin_path = java_home.join("bin").to_string_lossy().into_owned();
+    if let Some(updated_path) = update_path(&java_bin_path) {
+        updates = true;
         println!("export PATH=\"{}\"", updated_path);
-    });
+    }
+
+    if updates {
+        eprintln!("Use Java from {}", java_home.to_string_lossy());
+    }
 }
 
 fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<PathBuf> {
