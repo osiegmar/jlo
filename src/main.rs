@@ -8,6 +8,7 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::process::exit;
 use tempfile::{tempdir};
+use crate::adoptium::find_suitable_jdk;
 
 fn main() {
     if env::args().len() < 2 {
@@ -94,25 +95,6 @@ fn setup(java_version: &String) {
     if updates {
         eprintln!("Use Java from {}", java_home.to_string_lossy());
     }
-}
-
-fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<PathBuf> {
-    let entries = std::fs::read_dir(jdk_base).ok()?;
-
-    let mut matching_versions: Vec<PathBuf> = entries
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.is_dir() && path.file_name()
-                .and_then(|name| name.to_str())
-                .map_or(false, |name| name.starts_with(required_version))
-        })
-        .collect();
-
-    // Sort by directory name in descending order
-    matching_versions.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
-
-    matching_versions.into_iter().next()
 }
 
 fn install_jdk(jdk_base: &Path, java_version: &String) -> PathBuf {

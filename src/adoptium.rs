@@ -1,8 +1,34 @@
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::exit;
+use semver_rs::compare;
 
-pub fn fetch_metadata(java_version : &String) -> JdkMetadata {
+pub fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(jdk_base).ok()?;
+
+    let mut matching_versions: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.is_dir()
+                && path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .map_or(false, |name| name.starts_with(required_version))
+        })
+        .collect();
+
+    matching_versions.sort_by(|a, b| {
+        let a_str = a.file_name().and_then(|name| name.to_str()).unwrap_or("");
+        let b_str = b.file_name().and_then(|name| name.to_str()).unwrap_or("");
+
+        compare(b_str, a_str, None).unwrap()
+    });
+
+    matching_versions.first().cloned()
+}
+
+pub fn fetch_metadata(java_version: &String) -> JdkMetadata {
     let api_url = format!(
         "https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture={arch}&image_type=jdk&os={os}&vendor=eclipse",
         java_version = java_version,
@@ -35,7 +61,9 @@ pub fn fetch_metadata(java_version : &String) -> JdkMetadata {
             });
 
             if json_array.len() == 0 {
-                eprintln!("Error: No matching JDK found for the specified version and system architecture.");
+                eprintln!(
+                    "Error: No matching JDK found for the specified version and system architecture."
+                );
                 eprintln!("Tried to fetch metadata from: {}", api_url);
                 exit(1);
             }
@@ -44,8 +72,12 @@ pub fn fetch_metadata(java_version : &String) -> JdkMetadata {
 
             let semver = root_node["version"]["semver"].as_str().unwrap_or("");
             let release_name = root_node["release_name"].as_str().unwrap_or("");
-            let package_name = root_node["binary"]["package"]["name"].as_str().unwrap_or("");
-            let download_link = root_node["binary"]["package"]["link"].as_str().unwrap_or("");
+            let package_name = root_node["binary"]["package"]["name"]
+                .as_str()
+                .unwrap_or("");
+            let download_link = root_node["binary"]["package"]["link"]
+                .as_str()
+                .unwrap_or("");
             let checksum = root_node["binary"]["package"]["checksum"]
                 .as_str()
                 .unwrap_or("");
@@ -91,9 +123,7 @@ fn find_jdk_path(jdk_metadata: JdkMetadata, temp_dest: &Path) -> Result<PathBuf,
 
     // On macOS, the JDK is inside Contents/Home
     if env::consts::OS == "macos" {
-        extracted_jdk_path = extracted_jdk_path
-            .join("Contents")
-            .join("Home");
+        extracted_jdk_path = extracted_jdk_path.join("Contents").join("Home");
     }
 
     if env::consts::OS == "windows" {
