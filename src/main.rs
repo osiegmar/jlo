@@ -3,7 +3,7 @@ mod conf;
 mod download;
 mod extract;
 
-use crate::adoptium::{fetch_metadata, find_installed_jdk, find_suitable_jdk, JdkMetadata};
+use crate::adoptium::{clean_jdks, fetch_metadata, find_installed_jdk, find_suitable_jdk, JdkMetadata};
 use std::env;
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -21,6 +21,9 @@ fn main() {
     match command.as_str() {
         "env" => {
             env();
+        }
+        "clean" => {
+            clean();
         }
         "init" => {
             init();
@@ -48,6 +51,11 @@ fn print_usage_and_exit() -> ! {
 
 fn init() {
     conf::init_config();
+}
+
+fn clean() {
+    let jdk_base = jlo_home_dir().join("jdks");
+    clean_jdks(&jdk_base);
 }
 
 fn juse() {

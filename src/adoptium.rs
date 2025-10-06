@@ -1,7 +1,72 @@
+use semver_rs::compare;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::exit;
-use semver_rs::compare;
+
+pub fn clean_jdks(jdk_base: &Path) {
+    // collector major versions
+    let mut installed_jdks: std::collections::HashMap<i64, Vec<PathBuf>> = std::collections::HashMap::new();
+    let entries = match std::fs::read_dir(jdk_base) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("Error reading JDK base directory {:?}: {}", jdk_base, e);
+            exit(1);
+        }
+    };
+
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if !path.is_dir() {
+            eprintln!("{:?} is not a directory", path);
+            continue;
+        }
+        let file_name = match path.file_name().and_then(|n| n.to_str()) {
+            Some(name) => name,
+            None => {
+                eprintln!("Skipping directory with invalid name: {:?}", path);
+                continue
+            },
+        };
+        let semver = match semver_rs::parse(file_name, None) {
+            Ok(sv) => sv,
+            Err(_) => {
+                eprintln!("Skipping non-semver directory: {:?}", path);
+                continue
+            },
+        };
+        installed_jdks.entry(semver.major).or_default().push(path);
+    }
+
+    for (major, mut paths) in installed_jdks {
+        paths.sort_by(|a, b| {
+            let a_str = a.file_name().and_then(|name| name.to_str()).unwrap_or("");
+            let b_str = b.file_name().and_then(|name| name.to_str()).unwrap_or("");
+            compare(b_str, a_str, None).unwrap()
+        });
+
+        if paths.len() <= 1 {
+            continue;
+        }
+
+        let kept = paths[0].file_name().unwrap().to_str().unwrap();
+        let removed = paths[1..]
+            .iter()
+            .filter_map(|p| p.file_name().and_then(|n| n.to_str()))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        eprintln!(
+            "Keeping {} for JDK {}, but removing: {}",
+            kept, major, removed
+        );
+
+        for old_jdk in &paths[1..] {
+            if let Err(e) = std::fs::remove_dir_all(old_jdk) {
+                eprintln!("Error removing old JDK {:?}: {}", old_jdk, e);
+            }
+        }
+    }
+}
 
 pub fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<PathBuf> {
     let entries = std::fs::read_dir(jdk_base).ok()?;
