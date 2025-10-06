@@ -105,9 +105,9 @@ pub fn fetch_metadata(java_version: &String) -> JdkMetadata {
     }
 }
 
-pub fn install_jdk(jdk_metadata: JdkMetadata, source_dir: &Path, dest_dir: &Path) {
+pub fn install_jdk(jdk_metadata: &JdkMetadata, source_dir: &Path, dest_dir: &Path) {
     // Validate extracted path
-    let extracted_jdk_path = find_jdk_path(jdk_metadata, &source_dir).unwrap_or_else(|e| {
+    let extracted_jdk_path = find_jdk_path(&jdk_metadata, &source_dir).unwrap_or_else(|e| {
         eprintln!("Error: {}", e);
         exit(1);
     });
@@ -118,8 +118,8 @@ pub fn install_jdk(jdk_metadata: JdkMetadata, source_dir: &Path, dest_dir: &Path
     std::fs::rename(extracted_jdk_path, dest_dir).unwrap();
 }
 
-fn find_jdk_path(jdk_metadata: JdkMetadata, temp_dest: &Path) -> Result<PathBuf, String> {
-    let mut extracted_jdk_path = temp_dest.join(jdk_metadata.release_name);
+fn find_jdk_path(jdk_metadata: &JdkMetadata, temp_dest: &Path) -> Result<PathBuf, String> {
+    let mut extracted_jdk_path = temp_dest.join(&jdk_metadata.release_name);
 
     // On macOS, the JDK is inside Contents/Home
     if env::consts::OS == "macos" {
@@ -145,6 +145,14 @@ fn find_jdk_path(jdk_metadata: JdkMetadata, temp_dest: &Path) -> Result<PathBuf,
     }
 
     Ok(extracted_jdk_path)
+}
+
+pub fn find_installed_jdk(jdk_metadata: &JdkMetadata, jdk_base_path: &Path) -> Option<PathBuf> {
+    let extracted_jdk_path = jdk_base_path.join(&jdk_metadata.semver);
+    match extracted_jdk_path.exists() {
+        true => Some(extracted_jdk_path),
+        false => None,
+    }
 }
 
 pub struct JdkMetadata {

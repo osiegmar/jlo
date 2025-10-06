@@ -3,12 +3,12 @@ mod conf;
 mod download;
 mod extract;
 
-use std::{env};
+use crate::adoptium::{fetch_metadata, find_installed_jdk, find_suitable_jdk, JdkMetadata};
+use std::env;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::process::exit;
-use tempfile::{tempdir};
-use crate::adoptium::find_suitable_jdk;
+use tempfile::tempdir;
 
 fn main() {
     if env::args().len() < 2 {
@@ -25,6 +25,9 @@ fn main() {
         "use" => {
             juse();
         }
+        "update" => {
+            update();
+        }
         "env" => {
             env();
         }
@@ -39,7 +42,7 @@ fn main() {
 }
 
 fn print_usage_and_exit() -> ! {
-    eprintln!("Usage: jlo [ env | init | use ]");
+    eprintln!("Usage: jlo [ env | init | update | use ]");
     exit(1);
 }
 
@@ -63,6 +66,43 @@ fn juse() {
     setup(version);
 }
 
+fn cmd_line_version() -> Option<String> {
+    if env::args().len() <= 2 {
+        return None
+    }
+
+    let java_version = &env::args().nth(2).unwrap();
+
+    if !conf::is_valid_version(java_version) {
+        eprintln!("Unsupported version: '{}'.", java_version);
+        exit(1);
+    }
+
+    Some(java_version.to_string())
+}
+
+fn update() {
+    let java_version = cmd_line_version()
+        .or_else(|| conf::load().ok())
+        .unwrap_or_else(|| {
+            eprintln!("Error: Could not load configuration and no version specified.");
+            exit(1);
+        });
+
+    let jdk_metadata = fetch_metadata(&java_version);
+    let jdk_base = jlo_home_dir().join("jdks");
+
+    if let Some(path) = find_installed_jdk(&jdk_metadata, &jdk_base) {
+        eprintln!(
+            "Most recent version of JDK {} is already installed at: {}",
+            java_version,
+            path.to_str().unwrap()
+        );
+    } else {
+        install_jdk(&jdk_base, &jdk_metadata);
+    }
+}
+
 fn env() {
     let java_version = conf::load().unwrap_or_else(|e| {
         eprintln!("Error: Could not load configuration: {}", e);
@@ -76,7 +116,11 @@ fn setup(java_version: &String) {
     let jdk_base = jlo_home_dir().join("jdks");
 
     let java_home = find_suitable_jdk(&jdk_base, java_version)
-        .unwrap_or_else(|| install_jdk(&jdk_base, java_version));
+        .unwrap_or_else(|| {
+            // Find JDK metadata
+            let jdk_metadata = fetch_metadata(java_version);
+            install_jdk(&jdk_base, &jdk_metadata)
+        });
 
     let mut updates = false;
 
@@ -97,10 +141,7 @@ fn setup(java_version: &String) {
     }
 }
 
-fn install_jdk(jdk_base: &Path, java_version: &String) -> PathBuf {
-    // Find JDK metadata
-    let jdk_metadata = adoptium::fetch_metadata(java_version);
-
+fn install_jdk(jdk_base: &Path, jdk_metadata: &JdkMetadata) -> PathBuf {
     // Download JDK
     let temp_dir = tempdir().unwrap();
     let temp_file = temp_dir.path().join(&jdk_metadata.package_name);
@@ -115,17 +156,13 @@ fn install_jdk(jdk_base: &Path, java_version: &String) -> PathBuf {
         &jdk_metadata.checksum,
         file,
     )
-        .unwrap();
+    .unwrap();
 
     // Extract JDK to temp dir
-    extract::extract(
-        &temp_file,
-        &temp_dir.path(),
-    )
-        .unwrap();
+    extract::extract(&temp_file, &temp_dir.path()).unwrap();
 
     let dest_dir = jdk_base.join(&jdk_metadata.semver);
-    adoptium::install_jdk(jdk_metadata, &temp_dir.path(), dest_dir.as_path());
+    adoptium::install_jdk(&jdk_metadata, &temp_dir.path(), dest_dir.as_path());
 
     temp_dir.close().unwrap_or_else(|err| {
         eprintln!("Warning: Could not delete temporary directory: {}", err);
