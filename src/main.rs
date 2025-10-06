@@ -19,17 +19,17 @@ fn main() {
     // Get command
     let command = &env::args().nth(1).unwrap();
     match command.as_str() {
+        "env" => {
+            env();
+        }
         "init" => {
             init();
-        }
-        "use" => {
-            juse();
         }
         "update" => {
             update();
         }
-        "env" => {
-            env();
+        "use" => {
+            juse();
         }
         "sing" => {
             println!("There are no Easter Eggs in this program. Trust me. 💃");
@@ -42,7 +42,7 @@ fn main() {
 }
 
 fn print_usage_and_exit() -> ! {
-    eprintln!("Usage: jlo [ env | init | update | use ]");
+    eprintln!("Usage: jlo [ env | clean | init | update | use ]");
     exit(1);
 }
 
