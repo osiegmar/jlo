@@ -25,18 +25,17 @@ jobs:
           RUST_BACKTRACE: full
 
       - name: Build package
-        run: tar --no-same-owner -czf jlo-${{ matrix.os }}.tar.gz jlo-init.sh -C target/release jlo-bin
+        if: matrix.os == 'ubuntu-latest'
+        run: tar --no-same-owner -czf jlo-linux.tar.gz jlo-init.sh -C target/release jlo-bin
 
-      - name: Upload package
-        uses: actions/upload-artifact@v4
-        with:
-          path: jlo-${{ matrix.os }}.tar.gz
-          if-no-files-found: error
+      - name: Build package
+        if: matrix.os == 'macos-latest'
+        run: tar --no-same-owner -czf jlo-macos.tar.gz jlo-init.sh -C target/release jlo-bin
 
       - name: Create GitHub Release and upload artifacts
         uses: softprops/action-gh-release@v2
         with:
           tag_name: test
-          files: jlo-${{ matrix.os }}.tar.gz
+          files: jlo-*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
