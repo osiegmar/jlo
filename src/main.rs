@@ -34,6 +34,10 @@ fn main() {
         "use" => {
             juse();
         }
+        "selfupdate" => {
+            eprintln!("Self-update is handled by the jlo shell function.");
+            exit(1);
+        }
         "sing" => {
             println!("There are no Easter Eggs in this program. Trust me. 💃");
         }
@@ -45,7 +49,7 @@ fn main() {
 }
 
 fn print_usage_and_exit() -> ! {
-    eprintln!("Usage: jlo [ env | clean | init | update | use ]");
+    eprintln!("Usage: jlo [ env | clean | init | update | use | selfupdate ]");
     exit(1);
 }
 

@@ -4,47 +4,40 @@ set -eu
 
 JLO_HOME="$HOME/.jlo"
 JLO_BIN_DIR="$JLO_HOME/bin"
-JLO_BIN="$JLO_BIN_DIR/jlo-bin"
-JLO_INIT="$JLO_BIN_DIR/jlo-init.sh"
-JLO_URL="https://github.com/osiegmar/jlo/releases/download/test/jlo-bin"
+JLO_BASE_URL="https://github.com/osiegmar/jlo/releases/download/test/"
+
+OS="$(uname | tr '[:upper:]' '[:lower:]')"
+
+if [ "$OS" = "linux" ]; then
+  JLO_URL="$JLO_BASE_URL/jlo-linux.tar.gz"
+elif [ "$OS" = "darwin" ]; then
+  JLO_URL="$JLO_BASE_URL/jlo-macos.tar.gz"
+else
+  echo "Unsupported OS: $OS" >&2
+  exit 1
+fi
 
 mkdir -p "$JLO_BIN_DIR"
 
-if ! curl -fsSL https://github.com/osiegmar/jlo/releases/download/test/jlo-bin -o "$JLO_BIN"; then
+JLO_BUNDLE="jlo.tar.gz"
+FQ_JLO_BUNDLE="$JLO_BIN_DIR/$JLO_BUNDLE"
+if ! curl -sSL "$JLO_URL" -o "$FQ_JLO_BUNDLE"; then
   echo "Failed to download jlo binary from $JLO_URL" >&2
+  rm -f "$FQ_JLO_BUNDLE"
   exit 1
 fi
-chmod 755 "$JLO_BIN"
 
-cat <<'EOF' > "$JLO_INIT"
-#!/usr/bin/env zsh
-
-jlo() {
-  J="$HOME/.jlo/bin/jlo-bin"
-  case "$1" in
-    env|use)
-      . <("$J" "$@")
-      ;;
-    *)
-      "$J" "$@"
-      ;;
-  esac
-}
-
-jlo_after_cd() {
-  [[ -f ".jlorc" ]] && jlo env
-}
-
-autoload -U add-zsh-hook
-add-zsh-hook chpwd jlo_after_cd
-EOF
-
-chmod 755 "$JLO_INIT"
+if ! tar -xzf "$FQ_JLO_BUNDLE" -C "$JLO_BIN_DIR"; then
+  echo "Failed to extract jlo binary from $FQ_JLO_BUNDLE" >&2
+  rm -f "$FQ_JLO_BUNDLE"
+  exit 1
+fi
+rm -f "$FQ_JLO_BUNDLE"
 
 cat <<EOF
 Successfully installed J'lo to $JLO_HOME.
 
-To use it, add the following to your shell configuration file (e.g. ~/.zshrc or ~/.bashrc):
+Now, add the following lines to the end of your shell profile file (e.g., ~/.bashrc, ~/.zshrc):
 
 export JLO_HOME="\$HOME/.jlo"
 [[ -s "\$JLO_HOME/bin/jlo-init.sh" ]] && source "\$JLO_HOME/bin/jlo-init.sh"

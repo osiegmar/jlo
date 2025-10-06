@@ -8,8 +8,10 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v5
@@ -22,10 +24,19 @@ jobs:
         env:
           RUST_BACKTRACE: full
 
-      - name: Upload artifact
+      - name: Build package
+        run: tar --no-same-owner -czf jlo-${{ matrix.os }}.tar.gz jlo-init.sh -C target/release jlo-bin
+
+      - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: binary-${{ matrix.os }}
-          path: |
-            target/release/jlo-bin
-            target/release/jlo-bin.exe
+          path: jlo-${{ matrix.os }}.tar.gz
+          if-no-files-found: error
+
+      - name: Create GitHub Release and upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          name: test
+          files: jlo-${{ matrix.os }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
