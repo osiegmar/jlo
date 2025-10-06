@@ -10,8 +10,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
 
     steps:
       - uses: actions/checkout@v5
@@ -32,6 +30,22 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: tar --no-same-owner -czf jlo-macos.tar.gz jlo-init.sh -C target/release jlo-bin
 
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-artifact
+          path: jlo-*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: .
       - name: Create GitHub Release and upload artifacts
         uses: softprops/action-gh-release@v2
         with:
