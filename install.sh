@@ -7,11 +7,12 @@ JLO_BIN_DIR="$JLO_HOME/bin"
 JLO_BASE_URL="https://github.com/osiegmar/jlo/releases/download/test/"
 
 OS="$(uname | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m)"
 
 if [ "$OS" = "linux" ]; then
-  JLO_URL="$JLO_BASE_URL/jlo-linux.tar.gz"
+  JLO_URL="$JLO_BASE_URL/jlo-linux-$ARCH.tar.gz"
 elif [ "$OS" = "darwin" ]; then
-  JLO_URL="$JLO_BASE_URL/jlo-macos.tar.gz"
+  JLO_URL="$JLO_BASE_URL/jlo-macos-$ARCH.tar.gz"
 else
   echo "Unsupported OS: $OS" >&2
   exit 1

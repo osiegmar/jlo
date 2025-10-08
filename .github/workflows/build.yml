@@ -14,10 +14,10 @@ jobs:
             package: jlo-linux-x86_64
           - os: ubuntu-latest
             arch: aarch64
-            package: jlo-linux-x86_arch64
+            package: jlo-linux-arch64
           - os: macos-latest
             arch: aarch64
-            package: jlo-macos-aarch64
+            package: jlo-macos-arm64
 
     runs-on: ${{ matrix.os }}
 
