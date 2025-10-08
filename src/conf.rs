@@ -1,6 +1,5 @@
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::process::exit;
 
 pub fn load() -> Result<String, String> {
     let java_version = match std::fs::read_to_string(".jlorc") {
@@ -24,7 +23,7 @@ pub fn load() -> Result<String, String> {
     Ok(java_version.to_string())
 }
 
-pub fn init_config() {
+pub fn init_config() -> Result<(), String> {
     match OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -32,32 +31,28 @@ pub fn init_config() {
     {
         Ok(mut file) => {
             match write!(file, "25\n") {
-                Err(e) => {
-                    eprintln!("Error: Could not write to file '.jlorc': {}", e);
-                    exit(1);
-                }
                 Ok(..) => {
                     println!("Created config file '.jlorc' with default Java version 25");
+                    Ok(())
+                }
+                Err(e) => {
+                    Err(e.to_string())
                 }
             }
         }
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            eprintln!("Error: File '.jlorc' already exists!");
-            exit(1);
+            Err("File '.jlorc' already exists!".to_string())
         }
         Err(e) => {
-            eprintln!("Error: Could not create file '.jlorc': {}", e);
-            exit(1);
+            Err(e.to_string())
         }
     }
 }
 
 pub fn is_valid_version(version: &str) -> bool {
-    // TODO call/cache https://api.adoptium.net/v3/info/available_releases ?
-
     if let Ok(ver) = version.parse::<u32>() {
-        return ver >= 8
+        ver >= 8
+    } else {
+        false
     }
-
-    false
 }

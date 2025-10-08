@@ -54,7 +54,10 @@ fn print_usage_and_exit() -> ! {
 }
 
 fn init() {
-    conf::init_config();
+    conf::init_config().unwrap_or_else(|e| {
+        eprintln!("Error: Could not create config file: {}", e);
+        exit(1);
+    });
 }
 
 fn clean() {
