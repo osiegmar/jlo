@@ -253,3 +253,24 @@ fn jdk_arch() -> &'static str {
         _ => panic!("Unknown ARCH: {}", env::consts::ARCH),
     }
 }
+
+pub fn find_latest_jdk() -> Result<String, String> {
+    let response = reqwest::blocking::get("https://api.adoptium.net/v3/info/available_releases");
+    
+    match response {
+        Ok(releases) => {
+            let json: serde_json::Value = releases.json().map_err(|e| format!("Failed to parse JSON response: {}", e))?;
+            let available_releases = json["available_releases"].as_array().ok_or("Unexpected JSON structure received from API.")?;
+            
+            let latest = match available_releases.iter()
+                .filter_map(|v| v.as_i64())
+                .max() {
+                    Some(v) => v,
+                    None => return Err("No available releases found.".to_string()),
+                };
+            
+            Ok(latest.to_string())
+        }
+        Err(e) => Err(format!("Could not fetch available releases from API: {}", e)),
+    }
+}

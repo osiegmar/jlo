@@ -1,5 +1,6 @@
 use std::fs::OpenOptions;
 use std::io::Write;
+use crate::adoptium::find_latest_jdk;
 
 pub fn load() -> Result<String, String> {
     let java_version = match std::fs::read_to_string(".jlorc") {
@@ -24,29 +25,26 @@ pub fn load() -> Result<String, String> {
 }
 
 pub fn init_config() -> Result<(), String> {
-    match OpenOptions::new()
+    let latest_release = find_latest_jdk()
+        .map_err(|e| format!("Could not determine latest JDK version: {}", e))?;
+
+    let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(".jlorc")
-    {
-        Ok(mut file) => {
-            match write!(file, "25\n") {
-                Ok(..) => {
-                    println!("Created config file '.jlorc' with default Java version 25");
-                    Ok(())
-                }
-                Err(e) => {
-                    Err(e.to_string())
-                }
+        .map_err(|e| {
+            if e.kind() == std::io::ErrorKind::AlreadyExists {
+                "File '.jlorc' already exists!".to_string()
+            } else {
+                e.to_string()
             }
-        }
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            Err("File '.jlorc' already exists!".to_string())
-        }
-        Err(e) => {
-            Err(e.to_string())
-        }
-    }
+        })?;
+
+    write!(file, "{}\n", latest_release)
+        .map_err(|e| e.to_string())?;
+
+    println!("Created config file '.jlorc' with Java {}", latest_release);
+    Ok(())
 }
 
 pub fn is_valid_version(version: &str) -> bool {
