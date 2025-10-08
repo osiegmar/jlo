@@ -8,7 +8,17 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            package: jlo-linux-x86_64
+          - os: ubuntu-latest
+            arch: aarch64
+            package: jlo-linux-x86_arch64
+          - os: macos-latest
+            arch: aarch64
+            package: jlo-macos-aarch64
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -23,17 +33,12 @@ jobs:
           RUST_BACKTRACE: full
 
       - name: Build package
-        if: matrix.os == 'ubuntu-latest'
-        run: tar --no-same-owner -czf jlo-linux.tar.gz jlo-init.sh -C target/release jlo-bin
-
-      - name: Build package
-        if: matrix.os == 'macos-latest'
-        run: tar --no-same-owner -czf jlo-macos.tar.gz jlo-init.sh -C target/release jlo-bin
+        run: tar --no-same-owner -czf ${{ matrix.package }}.tar.gz jlo-init.sh -C target/release jlo-bin
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-artifact
+          name: ${{ matrix.package }}-artifact
           path: jlo-*.tar.gz
 
   release:
