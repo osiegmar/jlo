@@ -40,7 +40,7 @@ fn init() {
         .assert()
         .failure()
         .code(1)
-        .stderr(predicate::str::is_match(r"Error: File '.jlorc' already exists!").unwrap())
+        .stderr(predicate::str::is_match(r"Error: Could not create config file: File '.jlorc' already exists!").unwrap())
         .stdout("");
 
     // leave temp dir and clean up
