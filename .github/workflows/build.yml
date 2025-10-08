@@ -11,15 +11,9 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: x86_64
-            target: x86_64-unknown-linux-gnu
             package: jlo-linux-x86_64
-          - os: ubuntu-latest
-            arch: aarch64
-            target: aarch64-unknown-linux-gnu
-            package: jlo-linux-aarch64
           - os: macos-latest
             arch: aarch64
-            target: aarch64-apple-darwin
             package: jlo-macos-arm64
 
     runs-on: ${{ matrix.os }}
@@ -30,11 +24,8 @@ jobs:
       - name: Install Rust (if needed)
         run: rustup update
 
-      - name: Add target
-        run: rustup target add ${{ matrix.target }}
-
       - name: Build release
-        run: cargo test --release --target ${{ matrix.target }}
+        run: cargo test --release
         env:
           RUST_BACKTRACE: full
 
