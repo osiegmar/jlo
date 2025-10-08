@@ -4,7 +4,7 @@ set -eu
 
 JLO_HOME="$HOME/.jlo"
 JLO_BIN_DIR="$JLO_HOME/bin"
-JLO_BASE_URL="https://github.com/osiegmar/jlo/releases/download/test/"
+JLO_BASE_URL="https://github.com/osiegmar/jlo/releases/download/test"
 
 OS="$(uname | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
@@ -22,7 +22,7 @@ mkdir -p "$JLO_BIN_DIR"
 
 JLO_BUNDLE="jlo.tar.gz"
 FQ_JLO_BUNDLE="$JLO_BIN_DIR/$JLO_BUNDLE"
-if ! curl -sSL "$JLO_URL" -o "$FQ_JLO_BUNDLE"; then
+if ! curl -fsSL "$JLO_URL" -o "$FQ_JLO_BUNDLE"; then
   echo "Failed to download jlo binary from $JLO_URL" >&2
   rm -f "$FQ_JLO_BUNDLE"
   exit 1
