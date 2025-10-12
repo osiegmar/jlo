@@ -123,7 +123,7 @@ fn cmd_update() {
         }
 
         args.into_iter().filter(|arg| arg != "all").for_each(|v| {
-            if ! conf::is_valid_version(&v) {
+            if !conf::is_valid_version(&v) {
                 eprintln!("Skipping invalid version: '{}'.", v)
             } else {
                 versions_to_install.insert(v);

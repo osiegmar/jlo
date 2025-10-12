@@ -1,10 +1,10 @@
+use indicatif::{ProgressBar, ProgressStyle};
+use reqwest::blocking::Client;
+use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::time::Duration;
-use indicatif::{ProgressBar, ProgressStyle};
-use reqwest::blocking::Client;
-use sha2::{Digest, Sha256};
 
 pub fn download(
     name: &str,
@@ -55,7 +55,7 @@ pub fn download(
             "Checksum mismatch: expected {}, got {}.",
             expected_checksum, hash
         )
-            .into());
+        .into());
     }
 
     eprintln!("✅ Download complete, checksum passed.");

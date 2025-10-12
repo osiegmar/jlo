@@ -24,7 +24,7 @@ pub fn clean_jdks(jdk_base: &Path) -> Result<(), String> {
                 continue;
             }
         };
-        if ! path.join(MARKER_FILE).exists() {
+        if !path.join(MARKER_FILE).exists() {
             // skip directories not managed by jlo
             eprintln!("Ignoring non-jlo-managed directory: {:?}", path);
             continue;

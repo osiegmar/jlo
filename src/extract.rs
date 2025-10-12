@@ -8,22 +8,21 @@ use tar::Archive;
 
 pub fn extract(file: &Path, dest: &Path) -> Result<(), Box<dyn Error>> {
     match file.extension().and_then(|s| s.to_str()) {
-        Some("gz") => {
-            extract_tar_gz(file, dest)
-        }
-        Some("zip") => {
-            extract_zip(file, dest)
-        }
-        _ => {
-            Err(format!("Unsupported archive format: {:?}. Only .tar.gz and .zip are supported.", file).into())
-        }
+        Some("gz") => extract_tar_gz(file, dest),
+        Some("zip") => extract_zip(file, dest),
+        _ => Err(format!(
+            "Unsupported archive format: {:?}. Only .tar.gz and .zip are supported.",
+            file
+        )
+        .into()),
     }
 }
 
 fn extract_tar_gz(source: &Path, dest: &Path) -> Result<(), Box<dyn Error>> {
-    let file = File::open(source)
-        .map_err(|err| format!("Error opening archive {:?}: {}", source, err))?;
-    let metadata = file.metadata()
+    let file =
+        File::open(source).map_err(|err| format!("Error opening archive {:?}: {}", source, err))?;
+    let metadata = file
+        .metadata()
         .map_err(|err| format!("Error reading metadata of {:?}: {}", source, err))?;
     let pb = setup_progress_bar(metadata.len());
 
@@ -32,7 +31,8 @@ fn extract_tar_gz(source: &Path, dest: &Path) -> Result<(), Box<dyn Error>> {
     let decompressor = GzDecoder::new(progress_reader);
     let mut archive = Archive::new(decompressor);
 
-    let result = archive.unpack(dest)
+    let result = archive
+        .unpack(dest)
         .map_err(|err| format!("Error extracting archive {:?}: {}", source, err));
 
     match &result {
@@ -50,9 +50,10 @@ fn extract_tar_gz(source: &Path, dest: &Path) -> Result<(), Box<dyn Error>> {
 }
 
 fn extract_zip(source: &Path, dest: &Path) -> Result<(), Box<dyn Error>> {
-    let file = File::open(source)
-        .map_err(|err| format!("Error opening archive {:?}: {}", source, err))?;
-    let metadata = file.metadata()
+    let file =
+        File::open(source).map_err(|err| format!("Error opening archive {:?}: {}", source, err))?;
+    let metadata = file
+        .metadata()
         .map_err(|err| format!("Error reading metadata of {:?}: {}", source, err))?;
     let pb = setup_progress_bar(metadata.len());
 
@@ -61,7 +62,8 @@ fn extract_zip(source: &Path, dest: &Path) -> Result<(), Box<dyn Error>> {
     let mut archive = zip::ZipArchive::new(progress_reader)
         .map_err(|err| format!("Error reading zip archive {:?}: {}", source, err))?;
 
-    let result = archive.extract(dest)
+    let result = archive
+        .extract(dest)
         .map_err(|err| format!("Error extracting archive {:?}: {}", source, err));
 
     match &result {

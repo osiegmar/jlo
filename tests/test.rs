@@ -1,12 +1,11 @@
-use predicates::prelude::*;
 use assert_cmd::Command;
+use predicates::prelude::*;
 use serial_test::serial;
 
 #[test]
 fn missing_arguments() {
     let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
-    cmd
-        .assert()
+    cmd.assert()
         .failure()
         .code(1)
         .stderr(predicate::str::contains(r"Arguments missing."))
@@ -22,8 +21,7 @@ fn init() {
 
     // run init
     let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
-    cmd
-        .arg("init")
+    cmd.arg("init")
         .assert()
         .success()
         .code(0)
@@ -36,12 +34,16 @@ fn init() {
 
     // run init again to check for existing file error
     let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
-    cmd
-        .arg("init")
+    cmd.arg("init")
         .assert()
         .failure()
         .code(1)
-        .stderr(predicate::str::is_match(r"Error: Could not create config file: File '.jlorc' already exists!").unwrap())
+        .stderr(
+            predicate::str::is_match(
+                r"Error: Could not create config file: File '.jlorc' already exists!",
+            )
+            .unwrap(),
+        )
         .stdout("");
 
     // leave temp dir and clean up
@@ -54,7 +56,9 @@ fn init() {
 fn env() {
     // create a temp dir and set its path to JLO_HOME
     let temp_dir = tempfile::tempdir().unwrap();
-    unsafe { std::env::set_var("JLO_HOME", temp_dir.path()); }
+    unsafe {
+        std::env::set_var("JLO_HOME", temp_dir.path());
+    }
 
     // switch to temp dir and create .jlorc with "25"
     std::env::set_current_dir(&temp_dir).unwrap();
@@ -62,15 +66,14 @@ fn env() {
 
     // run env
     let mut cmd = Command::cargo_bin("jlo-bin").unwrap();
-    cmd
-        .arg("env")
-        .assert()
-        .success()
-        .code(0)
-        .stdout(predicate::str::contains("export JAVA_HOME=").and(predicate::str::contains("export PATH=")));
+    cmd.arg("env").assert().success().code(0).stdout(
+        predicate::str::contains("export JAVA_HOME=").and(predicate::str::contains("export PATH=")),
+    );
 
     // leave temp dir and clean up
     std::env::set_current_dir(std::env::temp_dir()).unwrap();
-    unsafe { std::env::remove_var("JLO_HOME"); }
+    unsafe {
+        std::env::remove_var("JLO_HOME");
+    }
     temp_dir.close().unwrap();
 }
