@@ -83,7 +83,7 @@ pub fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<Path
                 && path
                     .file_name()
                     .and_then(|name| name.to_str())
-                    .map_or(false, |name| name.starts_with(required_version))
+                    .is_some_and(|name| name.starts_with(required_version))
         })
         .collect();
 
@@ -193,7 +193,7 @@ pub fn install_jdk(
     dest_dir: &Path,
 ) -> Result<(), String> {
     // Validate extracted path
-    let extracted_jdk_path = find_jdk_path(&jdk_metadata, &source_dir)
+    let extracted_jdk_path = find_jdk_path(jdk_metadata, source_dir)
         .map_err(|e| format!("Could not find JDK directory: {}", e))?;
 
     // Create destination directory

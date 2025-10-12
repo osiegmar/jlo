@@ -39,7 +39,7 @@ pub fn init_config(latest_release: String) -> Result<(), String> {
             }
         })?;
 
-    write!(file, "{}\n", latest_release).map_err(|e| e.to_string())?;
+    writeln!(file, "{}", latest_release).map_err(|e| e.to_string())?;
 
     println!("Created config file '.jlorc' with Java {}", latest_release);
     Ok(())

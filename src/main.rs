@@ -146,7 +146,7 @@ fn cmd_update() {
 }
 
 fn update(java_version: &String) {
-    let jdk_metadata = fetch_metadata(&java_version).unwrap_or_else(|e| {
+    let jdk_metadata = fetch_metadata(java_version).unwrap_or_else(|e| {
         eprintln!("Error: Could not fetch JDK metadata: {}", e);
         exit(1);
     });
@@ -212,10 +212,10 @@ fn install_jdk(jdk_base: &Path, jdk_metadata: &JdkMetadata) -> Result<PathBuf, S
     .unwrap();
 
     // Extract JDK to temp dir
-    extract::extract(&temp_file, &temp_dir.path()).unwrap();
+    extract::extract(&temp_file, temp_dir.path()).unwrap();
 
     let dest_dir = jdk_base.join(&jdk_metadata.semver);
-    adoptium::install_jdk(&jdk_metadata, &temp_dir.path(), dest_dir.as_path())
+    adoptium::install_jdk(jdk_metadata, temp_dir.path(), dest_dir.as_path())
         .map_err(|e| format!("Error: Could not install JDK: {}", e))?;
 
     temp_dir.close().unwrap_or_else(|err| {
@@ -271,7 +271,7 @@ fn update_path(java_path: &str) -> Option<String> {
 }
 
 fn assert_java_version(java_version: &str) {
-    if !conf::is_valid_version(&java_version) {
+    if !conf::is_valid_version(java_version) {
         eprintln!(
             "Unsupported version: '{}'. Only major versions 8, 11, ... are supported.",
             java_version
