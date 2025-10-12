@@ -1,7 +1,7 @@
 # J'Lo – the Java Loader
 
 The Java Loader (or J'Lo for short) is a minimalistic tool to download and manage Java installations on your machine.
-It is written in Rust and the main focus is on simplicity and ease of use.
+It is written in Rust, with a main focus on simplicity and ease of use.
 
 J'Lo currently supports Linux (x86_64) and macOS (arm64).
 
@@ -10,14 +10,15 @@ Java versions are supported starting from Java 8, with all newer versions workin
 
 ## Installing J'Lo
 
-Installing J'Lo on Unix-like systems (Linux, macOS, WSL, etc.):
+To install J'Lo on Unix-like systems (Linux, macOS, WSL, etc.):
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/java-loader/jlo/refs/heads/main/install.sh)"
 ```
 
-This will download the latest J'Lo binary and install it to `~/.jlo/`. You can safely re-run this command to update
-J'Lo to the latest version. This is basically the same as running `jlo selfupdate`.
+This will download the latest J'Lo binary and install it to `~/.jlo/`.
+You can safely re-run this command to update J'Lo to the latest version, which is basically the same as running
+`jlo selfupdate`.
 
 > [!IMPORTANT]
 > Watch the output closely, as you will have to add some lines to your shell profile to make `jlo` available in your
@@ -28,37 +29,46 @@ J'Lo to the latest version. This is basically the same as running `jlo selfupdat
 Setup environment for Java 25 (installing it first, if necessary):
 
 ```shell
+# Update JAVA_HOME and PATH for Java 25 in the current shell session.
 jlo env 25
 
-# Verify that Java 25 is now active (not needed, only for demonstration purposes)
+# Optionally, verify that the correct Java version is being used:
 echo $JAVA_HOME
 which java
 ```
 
-JDKs are installed to `~/.jdks/` on Linux and `~/Library/Java/JavaVirtualMachines/` on macOS.
-This allows automatic discovery of installed JDKs by IDEs like IntelliJ IDEA.
+Alternatively:
 
-## More Commands
+```shell
+cd /path/to/your/project
 
-| Command       | Description                                                                                        |
-|---------------|----------------------------------------------------------------------------------------------------|
-| `jlo env`     | Setup environment for the Java version specified in the `.jlorc` file of the current directory.    |
-| `jlo init 25` | Creating a `.jlorc` file in the current directory that pins the given Java version.                |
-| `jlo init`    | Creating a `.jlorc` file in the current directory that pins the **latest available** Java version. |
+# One-time setup: create a .jlorc file that pins Java 25 for this project.
+jlo init 25
+
+# Setup JAVA_HOME and PATH for the Java version specified in the .jlorc file.
+jlo env
+```
 
 > [!TIP]
 > If you enabled the J'Lo autoload feature during installation, J'Lo will automatically set up the Java environment
 > whenever you `cd` into a directory that contains a `.jlorc` file.
 
-## Maintenance Commands
+JDKs are installed to `~/.jdks/` on Linux and `~/Library/Java/JavaVirtualMachines/` on macOS.
+This allows automatic discovery of installed JDKs by IDEs like IntelliJ IDEA.
 
-| Command          | Description                                                                            |
-|------------------|----------------------------------------------------------------------------------------|
-| `jlo update`     | Update the Java version from the `.jlorc` file to the latest minor release.            |
-| `jlo update 25`  | Update specified Java version to the latest minor version.                             |
-| `jlo clean`      | Keep only the latest minor version of each installed major version, remove all others. |
-| `jlo selfupdate` | Update J'Lo itself to the latest version.                                              |
-| `jlo version`    | Print the currently installed J'Lo version.                                            |
+## Command Reference
+
+| Command          | Description                                                                             |
+|------------------|-----------------------------------------------------------------------------------------|
+| `jlo env`        | Set up the environment for the Java version specified in the `.jlorc` file.             |
+| `jlo env 25`     | Set up the environment for the Java version given as an argument. Ignore `.jlorc` file. |
+| `jlo init`       | Create a `.jlorc` file that pins the **latest available** Java version.                 |
+| `jlo init 25`    | Create a `.jlorc` file that pins the given Java version. Ignore `.jlorc` file.          |
+| `jlo update`     | Update the Java version from the `.jlorc` file to the latest minor release.             |
+| `jlo update 25`  | Update the specified Java version to the latest minor version. Ignore `.jlorc` file.    |
+| `jlo clean`      | Keep only the latest minor version of each installed major version, remove all others.  |
+| `jlo selfupdate` | Update J'Lo itself to the latest version.                                               |
+| `jlo version`    | Print the currently installed J'Lo version.                                             |
 
 ## Uninstalling J'Lo
 
