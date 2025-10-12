@@ -1,0 +1,58 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            package: jlo-linux-x86_64
+          - os: macos-latest
+            arch: aarch64
+            package: jlo-macos-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Rust (if needed)
+        run: rustup update
+
+      - name: Build release
+        run: cargo test --release
+        env:
+          RUST_BACKTRACE: full
+
+      - name: Build package
+        run: tar --no-same-owner -czf ${{ matrix.package }}.tar.gz jlo-autoload.sh jlo-init.sh -C target/release jlo-bin
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-artifact
+          path: jlo-*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: .
+      - name: Create GitHub Release and upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test
+          files: jlo-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
