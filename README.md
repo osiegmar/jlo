@@ -58,17 +58,18 @@ This allows automatic discovery of installed JDKs by IDEs like IntelliJ IDEA.
 
 ## Command Reference
 
-| Command          | Description                                                                             |
-|------------------|-----------------------------------------------------------------------------------------|
-| `jlo env`        | Set up the environment for the Java version specified in the `.jlorc` file.             |
-| `jlo env 25`     | Set up the environment for the Java version given as an argument. Ignore `.jlorc` file. |
-| `jlo init`       | Create a `.jlorc` file that pins the **latest available** Java version.                 |
-| `jlo init 25`    | Create a `.jlorc` file that pins the given Java version. Ignore `.jlorc` file.          |
-| `jlo update`     | Update the Java version from the `.jlorc` file to the latest minor release.             |
-| `jlo update 25`  | Update the specified Java version to the latest minor version. Ignore `.jlorc` file.    |
-| `jlo clean`      | Keep only the latest minor version of each installed major version, remove all others.  |
-| `jlo selfupdate` | Update J'Lo itself to the latest version.                                               |
-| `jlo version`    | Print the currently installed J'Lo version.                                             |
+| Command          | Description                                                                                                                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `jlo env`        | Set up the environment for the Java version specified in the `.jlorc` file.                                                                                                                   |
+| `jlo env 25`     | Set up the environment for the Java version given as an argument. Ignore `.jlorc` file.                                                                                                       |
+| `jlo init`       | Create a `.jlorc` file that pins the **latest available** Java version.                                                                                                                       |
+| `jlo init 25`    | Create a `.jlorc` file that pins the given Java version. Ignore `.jlorc` file.                                                                                                                |
+| `jlo update`     | Update the Java version from the `.jlorc` file to the latest minor release.                                                                                                                   |
+| `jlo update 25`  | Update the specified Java version to the latest minor version. Ignore `.jlorc` file.<br>Multiple versions can be specified, e.g. `jlo update 8 11 17`.<br>Missing versions will be installed. |
+| `jlo update all` | Update all installed Java versions to their latest minor releases. Ignore `.jlorc` file.                                                                                                      |
+| `jlo clean`      | Keep only the latest minor version of each installed major version, remove all others.                                                                                                        |
+| `jlo selfupdate` | Update J'Lo itself to the latest version.                                                                                                                                                     |
+| `jlo version`    | Print the currently installed J'Lo version.                                                                                                                                                   |
 
 ## Uninstalling J'Lo
 

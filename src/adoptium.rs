@@ -97,6 +97,33 @@ pub fn find_suitable_jdk(jdk_base: &Path, required_version: &str) -> Option<Path
     matching_versions.first().cloned()
 }
 
+pub fn find_installed_major_versions(jdk_base: &Path) -> Result<Vec<i64>, String> {
+    let mut major_versions = std::collections::HashSet::new();
+
+    let entries = std::fs::read_dir(jdk_base)
+        .map_err(|e| format!("Can't read JDK base directory {:?}: {}", jdk_base, e))?;
+
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let file_name = match path.file_name().and_then(|n| n.to_str()) {
+            Some(name) => name,
+            None => continue,
+        };
+        let semver = match semver_rs::parse(file_name, None) {
+            Ok(sv) => sv,
+            Err(_) => continue,
+        };
+        major_versions.insert(semver.major);
+    }
+
+    let mut major_versions_vec: Vec<i64> = major_versions.into_iter().collect();
+    major_versions_vec.sort_unstable();
+    Ok(major_versions_vec)
+}
+
 pub fn fetch_metadata(java_version: &String) -> Result<JdkMetadata, String> {
     let api_url = format!(
         "https://api.adoptium.net/v3/assets/latest/{java_version}/hotspot?architecture={arch}&image_type=jdk&os={os}&vendor=eclipse",

@@ -4,8 +4,10 @@ mod download;
 mod extract;
 
 use crate::adoptium::{
-    JdkMetadata, clean_jdks, fetch_metadata, find_installed_jdk, find_latest_jdk, find_suitable_jdk,
+    JdkMetadata, clean_jdks, fetch_metadata, find_installed_jdk, find_installed_major_versions,
+    find_latest_jdk, find_suitable_jdk,
 };
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -97,13 +99,53 @@ fn cmd_init() {
 }
 
 fn cmd_update() {
-    let java_version = version_from_commandline()
-        .or_else(|| conf::load().ok())
-        .unwrap_or_else(|| {
-            eprintln!("Error: Could not load configuration and no version specified.");
+    let mut versions_to_install: HashSet<String> = HashSet::new();
+
+    let args: Vec<String> = env::args().skip(2).collect();
+
+    if args.is_empty() {
+        let java_version = conf::load().unwrap_or_else(|e| {
+            eprintln!("Error: Could not load configuration: {}", e);
             exit(1);
         });
+        versions_to_install.insert(java_version);
+    } else {
+        if args.iter().any(|arg| arg == "all") {
+            find_installed_major_versions(&jdk_base_dir())
+                .unwrap_or_else(|e| {
+                    eprintln!("Error: Could not determine installed JDK versions: {}", e);
+                    exit(1);
+                })
+                .into_iter()
+                .for_each(|v| {
+                    versions_to_install.insert(v.to_string());
+                });
+        }
 
+        args.into_iter().filter(|arg| arg != "all").for_each(|v| {
+            if ! conf::is_valid_version(&v) {
+                eprintln!("Skipping invalid version: '{}'.", v)
+            } else {
+                versions_to_install.insert(v);
+            }
+        });
+
+        if versions_to_install.is_empty() {
+            eprintln!("No valid Java versions provided to update.");
+            exit(1);
+        }
+    }
+
+    // Sort versions_to_install alphabetically for consistent processing order
+    let mut versions_to_install: Vec<_> = versions_to_install.into_iter().collect();
+    versions_to_install.sort();
+
+    for java_version in versions_to_install {
+        update(&java_version);
+    }
+}
+
+fn update(java_version: &String) {
     let jdk_metadata = fetch_metadata(&java_version).unwrap_or_else(|e| {
         eprintln!("Error: Could not fetch JDK metadata: {}", e);
         exit(1);
@@ -123,18 +165,6 @@ fn cmd_update() {
             exit(1);
         });
     }
-}
-
-fn version_from_commandline() -> Option<String> {
-    if env::args().len() <= 2 {
-        return None;
-    }
-
-    let java_version = &env::args().nth(2).unwrap();
-
-    assert_java_version(java_version);
-
-    Some(java_version.to_string())
 }
 
 fn setup(java_version: &String) {
