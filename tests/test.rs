@@ -30,7 +30,14 @@ fn init() {
 
     // check if .jlorc contains "25"
     let content = std::fs::read_to_string(".jlorc").unwrap();
-    assert_eq!(content.trim(), "25");
+    let lines: Vec<_> = content.lines().collect();
+    assert_eq!(
+        lines,
+        [
+            "# Java version configured by J'Lo - https://github.com/java-loader/jlo",
+            "25"
+        ]
+    );
 
     // run init again to check for existing file error
     let mut cmd = Command::cargo_bin("jlo-bin").unwrap();

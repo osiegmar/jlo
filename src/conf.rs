@@ -2,8 +2,8 @@ use std::fs::OpenOptions;
 use std::io::Write;
 
 pub fn load() -> Result<String, String> {
-    let java_version = match std::fs::read_to_string(".jlorc") {
-        Ok(content) => content.trim().to_string(),
+    let content = match std::fs::read_to_string(".jlorc") {
+        Ok(content) => content,
         Err(e) => {
             if e.kind() == std::io::ErrorKind::NotFound {
                 return Err("To initialize a new config file, run: `jlo init` first.".to_string());
@@ -12,9 +12,12 @@ pub fn load() -> Result<String, String> {
         }
     };
 
-    if java_version.is_empty() {
-        return Err("File '.jlorc' is empty. Please specify a Java version.".to_string());
-    }
+    let java_version = content
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty() && !line.starts_with('#'))
+        .ok_or_else(|| "File '.jlorc' is empty. Please specify a Java version.".to_string())?
+        .to_string();
 
     if !is_valid_version(&java_version) {
         return Err(format!(
@@ -39,6 +42,11 @@ pub fn init_config(latest_release: String) -> Result<(), String> {
             }
         })?;
 
+    writeln!(
+        file,
+        "# Java version configured by J'Lo - https://github.com/java-loader/jlo"
+    )
+    .map_err(|e| e.to_string())?;
     writeln!(file, "{}", latest_release).map_err(|e| e.to_string())?;
 
     println!("Created config file '.jlorc' with Java {}", latest_release);
